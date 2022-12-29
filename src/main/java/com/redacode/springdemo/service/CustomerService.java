@@ -1,10 +1,11 @@
-package com.redacode.springdemo.dao;
+package com.redacode.springdemo.service;
 
 import java.util.List;
 
 import com.redacode.springdemo.entity.Customer;
 
-public interface CustomerDAO {
+
+public interface CustomerService {
 
 	public List<Customer> getCustomers();
 
@@ -13,4 +14,5 @@ public interface CustomerDAO {
 	public Customer getCustomer(int theId);
 
 	public void deleteCustomer(int theId);
+	
 }
