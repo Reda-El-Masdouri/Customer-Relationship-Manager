@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.redacode.springdemo.entity.Customer;
+import com.redacode.springdemo.utility.SortUtils;
 
 @Repository
 public class CustomerDAOImpl implements CustomerDAO {
@@ -19,19 +20,38 @@ public class CustomerDAOImpl implements CustomerDAO {
 	
 	
 	@Override
-	public List<Customer> getCustomers() {
+	public List<Customer> getCustomers(int theSortField) {
 		
 		// get the current hibernate session
 		Session currentSession = sessionFactory.getCurrentSession();
+				
+		// determine sort field
+		String theFieldName = null;
 		
-		// create a query .. sort by the last name
-		Query<Customer> theQuery = currentSession.createQuery("from Customer order by lastName",
-				Customer.class);
+		switch (theSortField) {
+			case SortUtils.FIRST_NAME: 
+				theFieldName = "firstName";
+				break;
+			case SortUtils.LAST_NAME:
+				theFieldName = "lastName";
+				break;
+			case SortUtils.EMAIL:
+				theFieldName = "email";
+				break;
+			default:
+				// if nothing matches the default to sort by lastName
+				theFieldName = "lastName";
+		}
+		
+		// create a query  
+		String queryString = "from Customer order by " + theFieldName;
+		Query<Customer> theQuery = 
+				currentSession.createQuery(queryString, Customer.class);
 		
 		// execute query and get result list
 		List<Customer> customers = theQuery.getResultList();
-		
-		// return the results
+				
+		// return the results		
 		return customers;
 	}
 
@@ -69,6 +89,35 @@ public class CustomerDAOImpl implements CustomerDAO {
 //		Customer theCustomer = curentSession.get(Customer.class, theId);
 //		
 //		curentSession.delete(theCustomer);
+	}
+
+
+	@Override
+	public List<Customer> searchCustomers(String theSearchName) {
+		
+		// get the current hibernate session
+        Session currentSession = sessionFactory.getCurrentSession();
+        
+        Query theQuery = null;
+        
+        //
+        // only search by name if theSearchName is not empty
+        //
+        if (theSearchName != null && theSearchName.trim().length() > 0) {
+            // search for firstName or lastName ... case insensitive
+            theQuery =currentSession.createQuery("from Customer where lower(firstName) like :theName or lower(lastName) like :theName", Customer.class);
+            theQuery.setParameter("theName", "%" + theSearchName.toLowerCase() + "%");
+        }
+        else {
+            // theSearchName is empty ... so just get all customers
+            theQuery =currentSession.createQuery("from Customer", Customer.class);            
+        }
+        
+        // execute query and get result list
+        List<Customer> customers = theQuery.getResultList();
+                
+        // return the results        
+        return customers;
 	}
 
 }
